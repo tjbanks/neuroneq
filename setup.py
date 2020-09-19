@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="bmtool",
+    name="neuroneq",
     version="0.0.1",
     author="Tyler Banks",
     author_email="tbanks@mail.missouri.edu",
@@ -18,7 +18,9 @@ setup(
     install_requires=[
         'click',
         'matplotlib',
-        'numpy'
+        'numpy',
+        'scipy',
+        'sympy'
     ],
     classifiers=[
         'Intended Audience :: Developers',

@@ -8,6 +8,8 @@ import os
 import threading
 import matplotlib
 import numpy as np
+from scipy.optimize import curve_fit
+import sympy
 
 matplotlib.use("TkAgg")
 
@@ -112,8 +114,8 @@ class NeuronEQWindow():
         self.main()
 
     def menu_bar(self):
-        def hello():
-            print("hello!")
+        def usage():
+            messagebox.showinfo("Usage", "Use of exponentials - use exp(), be sure to remove spaces between exp and (). ")
             
         def about():
             messagebox.showinfo("About", "Written for:\nProfessor Satish Nair's Neural Engineering Laboratory\nat The University of Missouri\n\nWritten by: Tyler Banks\n\nEmail tbg28@mail.missouri.edu with questions", icon='info')
@@ -129,6 +131,7 @@ class NeuronEQWindow():
         menubar.add_cascade(label="File", menu=filemenu)
         
         helpmenu = tk.Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="Usage", command=usage)
         helpmenu.add_command(label="About", command=about)
         menubar.add_cascade(label="Help", menu=helpmenu)
         return menubar
@@ -187,32 +190,90 @@ class NeuronEQWindow():
         row_header = ['variable','value','comment','value_is_string']
         rows=[]
         
-        def plot():
-            self.alphaplot.clear()
+        def inf_func(v,vh,tau):
+            return 1.0/(1.0+(np.exp((v+vh)/(-tau))))
 
-            # 100 linearly spaced numbers
-            x = np.linspace(-5,5,1000)
+        def fit_inf():
+            
+            v = self.v
 
-            # the function, which is y = x^2 here
-            #y = x**2
-            alpha_expression = self.alpha_row.value()
-            alpha_expression = alpha_expression.replace("exp(","np.exp(")
-
-            print(alpha_expression)
-
-            y = x**2
-
-            self.alphaline = self.alphaplot.plot(x,y)
-                
-            self.alphacanvas.draw()
-
+            self.betaplot.clear()
+            self.betaplot.title.set_text('Inf Regression')
+            inf_expression = self.alpha_row.value() + "/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
+            inf_expression_np = inf_expression.replace("exp(","np.exp(")
+            y = eval(inf_expression_np)
+            self.betaline = self.betaplot.plot(self.v,y,label="original")
             
 
-        def verify1():
-            print("Running Stimulation Evoked Contractions, case 1")
+            popt, pcov = curve_fit(inf_func, v, self.inf_y)#,bounds=(-1000,1000))
+            #print(popt)
+            self.betaplot.plot(self.v, inf_func(self.v, *popt), 'r-',label="fit")
 
-        def verify2():
-            print("Running Stimulation Evoked Contractions, case 2")
+            inf_func_vh = "vhalf"
+            inf_func_tau = "tau"
+            
+            inf_func_vh = round(popt[0],2)
+            inf_func_tau = -round(popt[1],2)
+            inf_func_str = "1.0/(1.0+(exp((v+" + str(inf_func_vh) + ")/("+ str(inf_func_tau)+"))))"
+
+            self.fit_inf_row.set_value(inf_func_str)
+            self.fit_inf_vh_row.set_value(inf_func_vh)
+            self.fit_inf_tau_row.set_value(inf_func_tau)
+
+            self.betaplot.legend()
+            self.betacanvas.draw()
+
+        def plot():
+            self.alphaplot.clear()
+            self.alphaplot.title.set_text('Alpha/Beta')
+            self.v = np.linspace(float(self.min_row.value()),float(self.max_row.value()),2000)
+            v = self.v
+            alpha_expression = self.alpha_row.value()
+            alpha_expression = alpha_expression.replace("exp(","np.exp(")
+            y = eval(alpha_expression)
+            self.alphaline = self.alphaplot.plot(self.v,y,label='Alpha')
+
+            beta_expression = self.beta_row.value()
+            beta_expression = beta_expression.replace("exp(","np.exp(")
+            y = eval(beta_expression)
+            self.betaline = self.alphaplot.plot(self.v,y,label='Beta')
+            self.alphaplot.legend()
+            self.alphacanvas.draw()
+
+            self.infplot.clear()
+            self.infplot.title.set_text('Inf')
+            inf_expression = self.alpha_row.value() + "/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
+            inf_expression_np = inf_expression.replace("exp(","np.exp(")
+            self.inf_y = eval(inf_expression_np)
+            self.infline = self.infplot.plot(self.v,self.inf_y)
+            self.infcanvas.draw()
+
+            self.betaplot.clear()
+            self.betaplot.title.set_text('Inf Regression')
+            self.betaline = self.betaplot.plot(self.v,self.inf_y,label="original")
+            self.betacanvas.draw()
+
+            self.tauplot.clear()
+            self.tauplot.title.set_text('Tau')
+            tau_expression = "1/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
+            tau_expression_np = tau_expression.replace("exp(","np.exp(")
+            y = eval(tau_expression_np)
+            self.tauline = self.tauplot.plot(self.v,y)
+            self.taucanvas.draw()
+            
+            #Enable the fit button
+            self.fitInfButton.config(state=tk.ACTIVE)
+
+            #Calculate the functions symbolically, should be able to use tau directly
+            inf_calc = sympy.simplify(inf_expression)
+            tau_calc = sympy.simplify(tau_expression)
+            
+            self.calc_inf_row.set_value(inf_calc)
+            self.calc_tau_row.set_value(tau_calc)
+
+            self.fit_inf_row.set_value("")
+            self.fit_inf_vh_row.set_value("")
+            self.fit_inf_tau_row.set_value("")
 
         def param_changed(*args,val=True):
             param_has_changed = val
@@ -239,8 +300,8 @@ class NeuronEQWindow():
                 var.config(relief=tk.GROOVE)
                 var.grid(column=0, row=0, padx=5, sticky='WE') 
                 
-                val = tk.Entry(frame,textvariable=self.v_value,width=40)
-                val.grid(column=1, row=0, sticky='E')
+                self.val = tk.Entry(frame,textvariable=self.v_value,width=40)
+                self.val.grid(column=1, row=0, sticky='E')
                     
                 CreateToolTip(var,comment)
                 frame.pack()
@@ -256,6 +317,9 @@ class NeuronEQWindow():
 
             def value(self):
                 return self.v_value.get()
+            
+            def set_value(self,value):
+                self.v_value.set(value)
             
             def pack(self,*args,**kwargs):
                 super(Row,self).pack(*args,**kwargs)
@@ -295,7 +359,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.alphagraph = Figure(figsize=(4,2), dpi=100)
         self.alphaplot = self.alphagraph.add_subplot(111)
-        self.alphaplot.title.set_text('Alpha')
+        self.alphaplot.title.set_text('Alpha/Beta')
         #Create the canvas for the membrane vs time graph.
         self.alphacanvas = FigureCanvasTkAgg(self.alphagraph,top_option_frame)
         self.alphacanvas.draw()
@@ -308,7 +372,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.betagraph = Figure(figsize=(4,2), dpi=100)
         self.betaplot = self.betagraph.add_subplot(111)
-        self.betaplot.title.set_text('Beta')
+        self.betaplot.title.set_text('Inf Regression')
         #Create the canvas for the membrane vs time graph.
         self.betacanvas = FigureCanvasTkAgg(self.betagraph,top_option_frame)
         self.betacanvas.draw()
@@ -354,8 +418,10 @@ class NeuronEQWindow():
         self.beta_row = Row(general_frame).config("Beta Equation", "4*exp(-(v+70)/18)", "Beta Equation", True)
         self.beta_row.pack(padx=10)
 
-        self.variable_row = Row(general_frame).config("Voltage Variable", "v", "Variable to plot", True)
-        self.variable_row.pack(padx=10)
+        self.min_row = Row(general_frame).config("Min Voltage", "-100", "Minimum Voltage", True)
+        self.min_row.pack(padx=10)
+        self.max_row = Row(general_frame).config("Max Voltage", "50", "Maximum Voltage", True)
+        self.max_row.pack(padx=10)
     
         Row(general_frame).pack(pady=padtopbot)
 
@@ -363,6 +429,30 @@ class NeuronEQWindow():
         #plotButton.grid(column=0, row =99, padx=5, pady=5, sticky='W')
         plotButton.pack()
         plotButton.config(state=tk.ACTIVE)
+
+        self.fitInfButton = tk.Button(general_frame, text="Fit Inf Curve", command=fit_inf)
+        #plotButton.grid(column=0, row =99, padx=5, pady=5, sticky='W')
+        self.fitInfButton.pack()
+        self.fitInfButton.config(state=tk.DISABLED)
+
+        #tk.Label(output_frame, text = "Additional output here...",width=55).pack()
+
+        self.calc_inf_row = Row(output_frame).config("Inf Calculated", "", "alpha/(alpha+beta)", True)
+        self.calc_inf_row.pack(padx=10)
+        #self.calc_inf_row.val.config(state=tk.DISABLED)
+        self.calc_tau_row = Row(output_frame).config("Tau Calculated", "", "1/(alpha+beta)", True)
+        self.calc_tau_row.pack(padx=10)
+        #self.calc_tau_row.val.config(state=tk.DISABLED)
+
+        self.fit_inf_row = Row(output_frame).config("Fit Inf Func", "", "1.0/(1.0+(exp((v+vhalf)/(tau))))", True)
+        self.fit_inf_row.pack(padx=10)
+        #self.calc_inf_row.val.config(state=tk.DISABLED)   
+        self.fit_inf_vh_row = Row(output_frame).config("Fit Inf V1/2", "", "V Half", True)
+        self.fit_inf_vh_row.pack(padx=10)
+        #self.calc_inf_row.val.config(state=tk.DISABLED) 
+        self.fit_inf_tau_row = Row(output_frame).config("Fit Inf Tau", "", "Tau", True)
+        self.fit_inf_tau_row.pack(padx=10)
+        #self.calc_inf_row.val.config(state=tk.DISABLED)       
 
         """
         verifyBuildButton0 = tk.Button(general_frame, text="Run Custom Model", command=verify)
