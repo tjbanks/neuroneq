@@ -182,7 +182,7 @@ class NeuronEQWindow():
         table_frame.grid(column=0,row=1,sticky='news',padx=10,pady=5)
         import_export_frame.grid(column=1,row=0,sticky='news',padx=10,pady=5)
 
-        general_frame = tk.LabelFrame(table_frame, text="Alpha/Beta Equations",fg="red",width=200)
+        general_frame = tk.LabelFrame(table_frame, text="Equations",fg="red",width=200)
         general_frame.grid(column=0,row=0,sticky='news',padx=10,pady=5)
 
         output_frame = tk.LabelFrame(table_frame, text="Output",fg="red")
@@ -200,7 +200,7 @@ class NeuronEQWindow():
             v = self.v
 
             self.betaplot.clear()
-            self.betaplot.title.set_text('Inf Regression')
+            self.betaplot.title.set_text('x_inf regression')
             inf_expression = self.alpha_row.value() + "/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
             inf_expression_np = inf_expression.replace("exp(","np.exp(")
             y = eval(inf_expression_np)
@@ -236,7 +236,7 @@ class NeuronEQWindow():
 
         def plot():
             self.alphaplot.clear()
-            self.alphaplot.title.set_text('Alpha/Beta')
+            self.alphaplot.title.set_text('x_alpha/x_beta')
             self.v = np.linspace(float(self.min_row.value()),float(self.max_row.value()),2000)
             v = self.v
             alpha_expression = self.alpha_row.value()
@@ -252,7 +252,7 @@ class NeuronEQWindow():
             self.alphacanvas.draw()
 
             self.infplot.clear()
-            self.infplot.title.set_text('Inf')
+            self.infplot.title.set_text('x_inf')
             inf_expression = self.alpha_row.value() + "/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
             inf_expression_np = inf_expression.replace("exp(","np.exp(")
             self.inf_y = eval(inf_expression_np)
@@ -260,12 +260,12 @@ class NeuronEQWindow():
             self.infcanvas.draw()
 
             self.betaplot.clear()
-            self.betaplot.title.set_text('Inf Regression')
+            self.betaplot.title.set_text('x_inf regression')
             self.betaline = self.betaplot.plot(self.v,self.inf_y,label="original")
             self.betacanvas.draw()
 
             self.tauplot.clear()
-            self.tauplot.title.set_text('Tau')
+            self.tauplot.title.set_text('x_tau')
             tau_expression = "1/( " + self.alpha_row.value() + " + " + self.beta_row.value() + ")"
             tau_expression_np = tau_expression.replace("exp(","np.exp(")
             y = eval(tau_expression_np)
@@ -370,7 +370,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.alphagraph = Figure(figsize=(4,2), dpi=100)
         self.alphaplot = self.alphagraph.add_subplot(111)
-        self.alphaplot.title.set_text('Alpha/Beta')
+        self.alphaplot.title.set_text('x_alpha/x_beta')
         #Create the canvas for the membrane vs time graph.
         self.alphacanvas = FigureCanvasTkAgg(self.alphagraph,top_option_frame)
         self.alphacanvas.draw()
@@ -383,7 +383,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.betagraph = Figure(figsize=(4,2), dpi=100)
         self.betaplot = self.betagraph.add_subplot(111)
-        self.betaplot.title.set_text('Inf Regression')
+        self.betaplot.title.set_text('x_inf regression')
         #Create the canvas for the membrane vs time graph.
         self.betacanvas = FigureCanvasTkAgg(self.betagraph,top_option_frame)
         self.betacanvas.draw()
@@ -396,7 +396,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.infgraph = Figure(figsize=(4,2), dpi=100)
         self.infplot = self.infgraph.add_subplot(111)
-        self.infplot.title.set_text('Inf')
+        self.infplot.title.set_text('x_inf')
         #Create the canvas for the membrane vs time graph.
         self.infcanvas = FigureCanvasTkAgg(self.infgraph,top_option_frame)
         self.infcanvas.draw()
@@ -409,7 +409,7 @@ class NeuronEQWindow():
         #Membrane potential graph.
         self.taugraph = Figure(figsize=(4,2), dpi=100)
         self.tauplot = self.taugraph.add_subplot(111)
-        self.tauplot.title.set_text('Tau')
+        self.tauplot.title.set_text('x_tau')
         #Create the canvas for the membrane vs time graph.
         self.taucanvas = FigureCanvasTkAgg(self.taugraph,top_option_frame)
         self.taucanvas.draw()
@@ -441,27 +441,27 @@ class NeuronEQWindow():
         plotButton.pack()
         plotButton.config(state=tk.ACTIVE)
 
-        self.fitInfButton = tk.Button(general_frame, text="Fit Inf Curve", command=fit_inf)
+        self.fitInfButton = tk.Button(general_frame, text="Fit x_inf Curve", command=fit_inf)
         #plotButton.grid(column=0, row =99, padx=5, pady=5, sticky='W')
         self.fitInfButton.pack()
         self.fitInfButton.config(state=tk.DISABLED)
 
         #tk.Label(output_frame, text = "Additional output here...",width=55).pack()
 
-        self.calc_inf_row = Row(output_frame).config("Inf Calculated", "", "alpha/(alpha+beta)", True)
+        self.calc_inf_row = Row(output_frame).config("x_inf Calculated", "", "alpha/(alpha+beta)", True)
         self.calc_inf_row.pack(padx=10)
         #self.calc_inf_row.val.config(state=tk.DISABLED)
-        self.calc_tau_row = Row(output_frame).config("Tau Calculated", "", "1/(alpha+beta)", True)
+        self.calc_tau_row = Row(output_frame).config("x_tau Calculated", "", "1/(alpha+beta)", True)
         self.calc_tau_row.pack(padx=10)
         #self.calc_tau_row.val.config(state=tk.DISABLED)
 
-        self.fit_inf_row = Row(output_frame).config("Fit Inf Func", "", "1.0/(1.0+(exp((v+vhalf)/(tau))))", True)
+        self.fit_inf_row = Row(output_frame).config("Fit x_inf Func", "", "1.0/(1.0+(exp((v+vhalf)/(tau))))", True)
         self.fit_inf_row.pack(padx=10)
         #self.calc_inf_row.val.config(state=tk.DISABLED)   
-        self.fit_inf_vh_row = Row(output_frame).config("Fit Inf V1/2", "", "V Half", True)
+        self.fit_inf_vh_row = Row(output_frame).config("V1/2 of x_inf", "", "V Half", True)
         self.fit_inf_vh_row.pack(padx=10)
         #self.calc_inf_row.val.config(state=tk.DISABLED) 
-        self.fit_inf_tau_row = Row(output_frame).config("Fit Inf Tau", "", "Tau", True)
+        self.fit_inf_tau_row = Row(output_frame).config("k of x_inf", "", "k slope", True)
         self.fit_inf_tau_row.pack(padx=10)
         #self.calc_inf_row.val.config(state=tk.DISABLED)       
 
@@ -534,7 +534,7 @@ class NeuronEQWindow():
 
         page1 = ttk.Frame(nb)
         
-        nb.add(page1, text='Alpha/Beta to Inf/Tau')
+        nb.add(page1, text='x_alpha/x_beta to x_inf/x_tau')
         
         #Alternatively you could do parameters_page(page1), but wouldn't get scrolling
         self.bind_page(page1, self.parameters_page)
