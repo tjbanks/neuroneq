@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="neuroneq",
-    version="0.0.1",
+    version="0.0.2",
     author="Tyler Banks",
     author_email="tbanks@mail.missouri.edu",
     description="NeuronEQ",

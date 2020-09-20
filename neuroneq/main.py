@@ -9,6 +9,7 @@ import threading
 import matplotlib
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.special import expit
 import sympy
 
 matplotlib.use("TkAgg")
@@ -191,7 +192,8 @@ class NeuronEQWindow():
         rows=[]
         
         def inf_func(v,vh,tau):
-            return 1.0/(1.0+(np.exp((v+vh)/(-tau))))
+            return 1.0/(1.0+(np.exp((v+vh)/(tau))))
+            #return expit((v+vh)/tau)
 
         def fit_inf():
             
@@ -205,7 +207,16 @@ class NeuronEQWindow():
             self.betaline = self.betaplot.plot(self.v,y,label="original")
             
 
-            popt, pcov = curve_fit(inf_func, v, self.inf_y)#,bounds=(-1000,1000))
+            popt_n, pcov_n = curve_fit(inf_func, v, self.inf_y,bounds=((-1000,-1000),(1000,-0.00001)))
+            popt_p, pcov_p = curve_fit(inf_func, v, self.inf_y,bounds=((-1000,0.00001),(1000,1000)))
+            
+            resid_n = np.linalg.norm(y-inf_func(v, *popt_n))
+            resid_p = np.linalg.norm(y-inf_func(v, *popt_p))
+            
+            if resid_n <= resid_p:
+                popt = popt_n
+            else:
+                popt = popt_p
             #print(popt)
             self.betaplot.plot(self.v, inf_func(self.v, *popt), 'r-',label="fit")
 
@@ -213,7 +224,7 @@ class NeuronEQWindow():
             inf_func_tau = "tau"
             
             inf_func_vh = round(popt[0],2)
-            inf_func_tau = -round(popt[1],2)
+            inf_func_tau = round(popt[1],2)
             inf_func_str = "1.0/(1.0+(exp((v+" + str(inf_func_vh) + ")/("+ str(inf_func_tau)+"))))"
 
             self.fit_inf_row.set_value(inf_func_str)
