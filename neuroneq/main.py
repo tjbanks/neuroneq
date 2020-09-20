@@ -230,7 +230,7 @@ class NeuronEQWindow():
             inf_func_k = -round(1.0/float(popt[1]),4)
 
             self.fit_inf_row.set_value(inf_func_str)
-            self.fit_inf_vh_row.set_value(inf_func_vh)
+            self.fit_inf_vh_row.set_value(-inf_func_vh)
             self.fit_inf_tau_row.set_value(inf_func_k)
 
             self.betaplot.legend()
