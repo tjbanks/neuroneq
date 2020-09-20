@@ -103,7 +103,7 @@ class NeuronEQWindow():
         self.root.columnconfigure(0,weight=1)
         self.root.rowconfigure(0,weight=1)
         self.root.title("NeuronEQ (University of Missouri - Neural Engineering Lab) ")
-        self.root.geometry('900x800')
+        self.root.geometry('900x775')
 
         #self.root.resizable(0,0)
         self.root.config(menu=self.menu_bar())
@@ -182,7 +182,7 @@ class NeuronEQWindow():
         table_frame.grid(column=0,row=1,sticky='news',padx=10,pady=5)
         import_export_frame.grid(column=1,row=0,sticky='news',padx=10,pady=5)
 
-        general_frame = tk.LabelFrame(table_frame, text="Equations",fg="red",width=200)
+        general_frame = tk.LabelFrame(table_frame, text="Input",fg="red",width=200)
         general_frame.grid(column=0,row=0,sticky='news',padx=10,pady=5)
 
         output_frame = tk.LabelFrame(table_frame, text="Output",fg="red")
@@ -227,9 +227,11 @@ class NeuronEQWindow():
             inf_func_tau = round(popt[1],2)
             inf_func_str = "1.0/(1.0+(exp((v+" + str(inf_func_vh) + ")/("+ str(inf_func_tau)+"))))"
 
+            inf_func_k = -round(1.0/float(popt[1]),4)
+
             self.fit_inf_row.set_value(inf_func_str)
             self.fit_inf_vh_row.set_value(inf_func_vh)
-            self.fit_inf_tau_row.set_value(inf_func_tau)
+            self.fit_inf_tau_row.set_value(inf_func_k)
 
             self.betaplot.legend()
             self.betacanvas.draw()
@@ -387,9 +389,9 @@ class NeuronEQWindow():
         #Create the canvas for the membrane vs time graph.
         self.betacanvas = FigureCanvasTkAgg(self.betagraph,top_option_frame)
         self.betacanvas.draw()
-        self.betacanvas.get_tk_widget().grid(column = 0, row = 3)
+        self.betacanvas.get_tk_widget().grid(column = 1, row = 3)
         betatoolbar_frame = tk.Frame(master=top_option_frame)
-        betatoolbar_frame.grid(column=0,row=2,sticky='w')
+        betatoolbar_frame.grid(column=1,row=2,sticky='w')
         betatoolbar = NavigationToolbar2Tk(self.betacanvas,betatoolbar_frame)
         betatoolbar.update()
 
@@ -413,9 +415,9 @@ class NeuronEQWindow():
         #Create the canvas for the membrane vs time graph.
         self.taucanvas = FigureCanvasTkAgg(self.taugraph,top_option_frame)
         self.taucanvas.draw()
-        self.taucanvas.get_tk_widget().grid(column = 1, row = 3)
+        self.taucanvas.get_tk_widget().grid(column = 0, row = 3)
         tautoolbar_frame = tk.Frame(master=top_option_frame)
-        tautoolbar_frame.grid(column=1,row=2,sticky='w')
+        tautoolbar_frame.grid(column=0,row=2,sticky='w')
         tautoolbar = NavigationToolbar2Tk(self.taucanvas,tautoolbar_frame)
         tautoolbar.update()
 
