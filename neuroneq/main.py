@@ -94,6 +94,65 @@ class CreateToolTip(object):
             if tw:
                 tw.destroy()
 
+class Row(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.root = tk.Frame(self.parent)
+        self.is_string = False
+        return
+    
+    def config(self, variable, value, comment, is_string, entry_width=40,scale=False,scale_from=0,scale_to=2*np.pi,scale_command=None,scale_width=350):
+        self.v_value = tk.StringVar(self.root)
+        self.v_value.set(value)
+        #self.v_value.trace("w",param_changed)
+        
+        self.variable = variable
+        self.comment = comment
+        self.is_string = is_string
+        
+        frame = tk.Frame(self.root)
+        var = tk.Label(frame, text=variable ,width=15,background='light gray')
+        var.config(relief=tk.GROOVE)
+        var.grid(column=0, row=0, padx=5, sticky='WE') 
+        
+        self.val = tk.Entry(frame,textvariable=self.v_value,width=entry_width)
+        self.val.grid(column=1, row=0, sticky='E')
+
+        if scale:
+            if not scale_command:
+                scale_command = lambda: None
+
+            self.scale = tk.Scale(frame, variable=self.v_value, digits=4,resolution=0.001,from_=scale_from, to=scale_to, orient=tk.HORIZONTAL, command=scale_command,length=scale_width)
+            self.scale.grid(column=2,row=0, sticky='W')
+
+        CreateToolTip(var,comment)
+        frame.pack()
+        return self
+    
+    def row_to_param_str(self):
+        #default_var("RunName","testrun")		// Name of simulation run
+        proto = "default_var(\"{}\",{})\t\t// {}"
+        if self.is_string:
+            proto = "default_var(\"{}\",\"{}\")\t\t// {}"
+        line = proto.format(self.variable,self.v_value.get(),self.comment)
+        return line
+
+    def value(self):
+        return self.v_value.get()
+    
+    def set_value(self,value):
+        self.v_value.set(value)
+    
+    def pack(self,*args,**kwargs):
+        super(Row,self).pack(*args,**kwargs)
+        self.root.pack(*args,**kwargs)
+    
+    def grid(self,*args,**kwargs):
+        super(Row,self).grid(*args,**kwargs)
+        self.root.grid(*args,**kwargs)
+
+
 class NeuronEQWindow():
 
     def __init__(self):
@@ -163,6 +222,152 @@ class NeuronEQWindow():
         gen_frame(f)
         frame.update()
         canvas.config(scrollregion=canvas.bbox("all"))
+
+    def plot_distance_page(self,*args):
+        self.distanceplot.clear()
+        
+        src_pos = self.src_pos_row.value()
+        src_pos = np.array(eval(src_pos))
+        trg_pos = self.trg_pos_row.value()
+        trg_pos = np.array(eval(trg_pos))
+
+        def replace_trig(string):
+            return string.replace("cos(","np.cos(").replace("sin(","np.sin(").replace("tan(","np.tan(").replace("pi","np.pi")
+        
+        src_angle_x = self.src_angle_x_row.value()
+        src_angle_x = replace_trig(src_angle_x)
+        src_angle_x = eval(src_angle_x)
+
+        src_angle_y = self.src_angle_y_row.value()
+        src_angle_y = replace_trig(src_angle_y)
+        src_angle_y = eval(src_angle_y)
+
+        src_angle_z = self.src_angle_z_row.value()
+        src_angle_z = replace_trig(src_angle_z)
+        src_angle_z = eval(src_angle_z)
+
+        vec_pos = self.vec_pos_row.value()
+        vec_pos = replace_trig(vec_pos)
+        vec_pos = np.array(eval(vec_pos))
+
+        eq = self.equation_row.value()
+        dist = eval(replace_trig(eq))
+
+        true_dist = np.linalg.norm(trg_pos-src_pos)
+        
+        #print(dist)
+
+        self.distanceplot.scatter(src_pos[0],src_pos[1],src_pos[2],marker='o',s=100,c='b',label='src_pos')
+        self.distanceplot.scatter(trg_pos[0],trg_pos[1],trg_pos[2],marker='o',s=100,c='r',label='trg_pos')
+        self.distanceplot.scatter(vec_pos[0],vec_pos[1],vec_pos[2],marker='x',s=100,c='g',label='vec_pos')
+
+        try:
+            self.distanceplot.quiver(src_pos[0],src_pos[1],src_pos[2],(trg_pos[0]-src_pos[0]),(trg_pos[1]-src_pos[1]),(trg_pos[2]-src_pos[2]),
+            pivot='tail',length=true_dist,label="euclid: {:.4f}".format(true_dist),color='blue',normalize=True)
+        except Exception as e:
+            print(e)
+
+        try:
+            self.distanceplot.quiver(src_pos[0],src_pos[1],src_pos[2],(vec_pos[0]-src_pos[0]),(vec_pos[1]-src_pos[1]),(vec_pos[2]-src_pos[2]),
+            pivot='tail',length=np.linalg.norm(vec_pos-src_pos)/10,color='green',normalize=True)
+        except Exception as e:
+            print(e)
+
+        #try:
+        #    self.distanceplot.quiver(vec_pos[0],vec_pos[1],vec_pos[2],(trg_pos[0]-vec_pos[0]),(trg_pos[1]-vec_pos[1]),(trg_pos[2]-vec_pos[2]),
+        #    pivot='tail',length=np.linalg.norm(trg_pos-vec_pos),label="{:.4f}".format(dist),color='green',normalize=True)
+        #except Exception as e:
+        #    print(e)
+
+        try:
+            self.distanceplot.quiver(src_pos[0],src_pos[1],src_pos[2],(trg_pos[0]-src_pos[0]),(trg_pos[1]-src_pos[1]),(trg_pos[2]-src_pos[2]),
+            pivot='tail',length=dist,label="{:.4f}".format(dist),color='orange',normalize=True)
+        except Exception as e:
+            print(e)
+
+        self.distanceplot.legend()
+        self.distancecanvas.draw()
+        #v = self.v
+        #alpha_expression = self.alpha_row.value()
+        #alpha_expression = alpha_expression.replace("exp(","np.exp(")
+        #y = eval(alpha_expression)
+        #self.alphaline = self.alphaplot.plot(self.v,y,label='Alpha')
+
+    def distance_page(self,root):
+
+        top_option_frame = tk.LabelFrame(root, text="Plot")
+        table_frame = tk.LabelFrame(root, text="Input")
+
+        top_option_frame.grid(column=0,row=0,sticky='news',padx=10,pady=5)
+        table_frame.grid(column=0,row=1,sticky='news',padx=10,pady=5)
+
+        general_frame = tk.LabelFrame(table_frame, text="Input",fg="red",width=200)
+        general_frame.grid(column=0,row=0,sticky='news',padx=10,pady=5)
+
+        output_frame = tk.LabelFrame(table_frame, text="Output",fg="red")
+        output_frame.grid(column=1,row=0,sticky='news',padx=10,pady=5)
+        
+        #Membrane potential graph.
+        self.distance_figure = Figure(figsize=(8,3), dpi=100)
+        self.distanceplot = self.distance_figure.add_subplot(111,projection='3d')
+        self.distanceplot.title.set_text('3D Plane')
+        #Create the canvas for the membrane vs time graph.
+        self.distancecanvas = FigureCanvasTkAgg(self.distance_figure,top_option_frame)
+        self.distancecanvas.draw()
+        self.distancecanvas.get_tk_widget().grid(column = 0, row = 1)
+        distancetoolbar_frame = tk.Frame(master=top_option_frame)
+        distancetoolbar_frame.grid(column=0,row=0,sticky='w')
+        distancetoolbar = NavigationToolbar2Tk(self.distancecanvas,distancetoolbar_frame)
+        #https://stackoverflow.com/questions/62809702/how-to-get-3d-interactivity-to-work-while-embedding-a-matplotlib-figure-in-a-t
+        self.distancecanvas.mpl_connect('button_press_event', self.distanceplot.axes._button_press)
+        self.distancecanvas.mpl_connect('button_release_event', self.distanceplot.axes._button_release)
+        self.distancecanvas.mpl_connect('motion_notify_event', self.distanceplot.axes._on_move)
+        distancetoolbar.update()
+
+        padtopbot = 3
+        Row(general_frame).pack(pady=padtopbot-1)
+        
+        pos_hint = "Enter in list form eg: [0,0,0]"
+
+        self.src_pos_row = Row(general_frame).config("src_pos", "[0,0,0]" , pos_hint , True,entry_width=100)
+        self.src_pos_row.pack(padx=10)
+
+        self.trg_pos_row = Row(general_frame).config("trg_pos", "[1,1,1]" , pos_hint , True,entry_width=100)
+        self.trg_pos_row.pack(padx=10)
+
+        plot_distance_page = self.plot_distance_page
+        self.src_angle_x_row = Row(general_frame).config("src_angle_x", "pi/2" , "in radians" , True,scale=True,scale_command=plot_distance_page)
+        self.src_angle_x_row.pack(padx=10)
+        self.src_angle_y_row = Row(general_frame).config("src_angle_y", "pi/2" , "in radians" , True,scale=True,scale_command=plot_distance_page)
+        self.src_angle_y_row.pack(padx=10)
+        self.src_angle_z_row = Row(general_frame).config("src_angle_z", "pi/2" , "in radians" , True,scale=True,scale_command=plot_distance_page)
+        self.src_angle_z_row.pack(padx=10)
+
+        vec_pos_hint = "Use src_angle_x, src_angle_y, src_angle_z"
+        self.vec_pos_row = Row(general_frame).config("vec_pos", "[cos(src_angle_x), sin(src_angle_y), sin(src_angle_x)]" , vec_pos_hint , True,entry_width=100)
+        self.vec_pos_row.pack(padx=10)
+
+        equation = "np.linalg.norm(np.cross((trg_pos - src_pos), (trg_pos - vec_pos))) / np.linalg.norm((vec_pos - src_pos))"
+        self.equation_row = Row(general_frame).config("Distance Equation", equation , "Use src_pos,trg_pos,vec_pos", True,entry_width=100)
+        self.equation_row.pack(padx=10)
+
+        def euclid():
+            self.equation_row.set_value("np.linalg.norm(trg_pos - src_pos)")
+            self.plot_distance_page()
+        
+        def angle():
+            self.equation_row.set_value(equation)
+            self.plot_distance_page()
+
+
+        plotButton = tk.Button(general_frame, text="Plot", command=self.plot_distance_page)
+        euclidButton = tk.Button(general_frame, text="Euclidian Distance", command=euclid)
+        angleButton = tk.Button(general_frame, text="Angle Based Distance", command=angle)
+        #plotButton.grid(column=0, row =99, padx=5, pady=5, sticky='W')
+        plotButton.pack()
+        euclidButton.pack(side=tk.RIGHT)
+        angleButton.pack(side=tk.RIGHT)
+        plotButton.config(state=tk.ACTIVE)
 
 
     def parameters_page(self,root):
@@ -291,56 +496,7 @@ class NeuronEQWindow():
         def param_changed(*args,val=True):
             param_has_changed = val
 
-        class Row(tk.Frame):
-            def __init__(self, parent, *args, **kwargs):
-                tk.Frame.__init__(self, parent, *args, **kwargs)
-                self.parent = parent
-                self.root = tk.Frame(self.parent)
-                self.is_string = False
-                return
-            
-            def config(self, variable, value, comment, is_string):
-                self.v_value = tk.StringVar(self.root)
-                self.v_value.set(value)
-                self.v_value.trace("w",param_changed)
-                
-                self.variable = variable
-                self.comment = comment
-                self.is_string = is_string
-                
-                frame = tk.Frame(self.root)
-                var = tk.Label(frame, text=variable ,width=15,background='light gray')
-                var.config(relief=tk.GROOVE)
-                var.grid(column=0, row=0, padx=5, sticky='WE') 
-                
-                self.val = tk.Entry(frame,textvariable=self.v_value,width=40)
-                self.val.grid(column=1, row=0, sticky='E')
-                    
-                CreateToolTip(var,comment)
-                frame.pack()
-                return self
-            
-            def row_to_param_str(self):
-                #default_var("RunName","testrun")		// Name of simulation run
-                proto = "default_var(\"{}\",{})\t\t// {}"
-                if self.is_string:
-                    proto = "default_var(\"{}\",\"{}\")\t\t// {}"
-                line = proto.format(self.variable,self.v_value.get(),self.comment)
-                return line
-
-            def value(self):
-                return self.v_value.get()
-            
-            def set_value(self,value):
-                self.v_value.set(value)
-            
-            def pack(self,*args,**kwargs):
-                super(Row,self).pack(*args,**kwargs)
-                self.root.pack(*args,**kwargs)
-            
-            def grid(self,*args,**kwargs):
-                super(Row,self).grid(*args,**kwargs)
-                self.root.grid(*args,**kwargs)
+        
 
         """
         def refresh():
@@ -535,13 +691,17 @@ class NeuronEQWindow():
         label.pack(expand=True)
 
         page1 = ttk.Frame(nb)
+        page2 = ttk.Frame(nb)
         
         nb.add(page1, text='x_alpha/x_beta to x_inf/x_tau')
+        nb.add(page2, text='distance equation visualizer')
         
         #Alternatively you could do parameters_page(page1), but wouldn't get scrolling
         self.bind_page(page1, self.parameters_page)
-        
+        self.bind_page(page2, self.distance_page)
+
         self.display_app_status("Ready")
+        self.plot_distance_page()
         try:
             #print('Load complete. Running Sim Builder...')
             self.root.mainloop()
