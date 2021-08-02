@@ -267,20 +267,22 @@ class NeuronEQWindow():
         except Exception as e:
             print(e)
 
+        src_vec_dist = np.linalg.norm(vec_pos-src_pos)
         try:
             self.distanceplot.quiver(src_pos[0],src_pos[1],src_pos[2],(vec_pos[0]-src_pos[0]),(vec_pos[1]-src_pos[1]),(vec_pos[2]-src_pos[2]),
-            pivot='tail',length=np.linalg.norm(vec_pos-src_pos)/10,color='green',normalize=True)
+            pivot='tail',length=src_vec_dist*1000,color='green',normalize=True)
         except Exception as e:
             print(e)
 
+        #vec_trg_dist = np.linalg.norm(trg_pos-vec_pos)
         #try:
         #    self.distanceplot.quiver(vec_pos[0],vec_pos[1],vec_pos[2],(trg_pos[0]-vec_pos[0]),(trg_pos[1]-vec_pos[1]),(trg_pos[2]-vec_pos[2]),
-        #    pivot='tail',length=np.linalg.norm(trg_pos-vec_pos),label="{:.4f}".format(dist),color='green',normalize=True)
+        #    pivot='tail',length=vec_trg_dist,label="{:.4f}".format(vec_trg_dist),color='green',normalize=True)
         #except Exception as e:
         #    print(e)
 
         try:
-            self.distanceplot.quiver(src_pos[0],src_pos[1],src_pos[2],(trg_pos[0]-src_pos[0]),(trg_pos[1]-src_pos[1]),(trg_pos[2]-src_pos[2]),
+            self.distanceplot.quiver(vec_pos[0],vec_pos[1],vec_pos[2],(trg_pos[0]-vec_pos[0]),(trg_pos[1]-vec_pos[1]),(trg_pos[2]-vec_pos[2]),
             pivot='tail',length=dist,label="{:.4f}".format(dist),color='orange',normalize=True)
         except Exception as e:
             print(e)
@@ -353,7 +355,7 @@ class NeuronEQWindow():
 
         def euclid():
             self.equation_row.set_value("np.linalg.norm(trg_pos - src_pos)")
-            self.plot_distance_page()
+            self.plot_distance_page(disable_vec_trg=True)
         
         def angle():
             self.equation_row.set_value(equation)
@@ -361,12 +363,12 @@ class NeuronEQWindow():
 
 
         plotButton = tk.Button(general_frame, text="Plot", command=self.plot_distance_page)
-        euclidButton = tk.Button(general_frame, text="Euclidian Distance", command=euclid)
-        angleButton = tk.Button(general_frame, text="Angle Based Distance", command=angle)
+        #euclidButton = tk.Button(general_frame, text="Euclidian Distance", command=euclid)
+        #angleButton = tk.Button(general_frame, text="Angle Based Distance", command=angle)
         #plotButton.grid(column=0, row =99, padx=5, pady=5, sticky='W')
         plotButton.pack()
-        euclidButton.pack(side=tk.RIGHT)
-        angleButton.pack(side=tk.RIGHT)
+        #euclidButton.pack(side=tk.RIGHT)
+        #angleButton.pack(side=tk.RIGHT)
         plotButton.config(state=tk.ACTIVE)
 
 
