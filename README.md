@@ -1,6 +1,13 @@
 # neuroneq
 A GUI-based python tool to visualize equations used in simulated neurons.
 
+## Installing and running
+
+```
+pip install neuroneq
+neuroneq
+```
+
 ## Code example
 
 Easily convert from alpha/beta to tau/inf
